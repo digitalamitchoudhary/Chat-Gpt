@@ -1,3 +1,4 @@
+
 import './App.css';
 import gptLogo from '../src/assest/chatgpt.svg';
 import addBtn from '../src/assest/add-30.png';
@@ -11,19 +12,12 @@ import gptImgLogo from '../src/assest/chatgptLogo.svg';
 import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 
-// Function to send message to Gemini API
+// Gemini API Function
 const sendMsgToGemini = async (message) => {
-  const API_KEY =  process.env.REACT_APP_API_URL; // Add your Gemini API key here
-  const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+
+  const API_KEY = process.env.REACT_APP_API_URL; // Add your Gemini API key here
 
   try {
-    // const response = await axios.post(
-    //   `${GEMINI_API_URL}?key=${API_KEY}`,
-    //   {
-    //     contents: [{ parts: [{ text: message }] }]
-    //   }
-    // );
-
     const response = await axios.post(
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
       {
@@ -43,114 +37,160 @@ const sendMsgToGemini = async (message) => {
       }
     );
 
-    return response.data.candidates[0]?.content.parts[0]?.text || "No response";
+    return response?.data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
+
   } catch (error) {
-    console.error("Error fetching Gemini API response:", error);
+    console.error("Gemini API Error:", error.response?.data || error.message);
     return "Error fetching response.";
   }
 };
 
 function App() {
+
   const msgEnd = useRef(null);
+
   const [input, setInput] = useState("");
+
   const [messages, setMessages] = useState([
     { text: "Hello! How can I help you today?", sender: "bot" }
   ]);
 
-  
   useEffect(() => {
-    // Scroll to the bottom whenever the messages change
+
     if (msgEnd.current) {
-      msgEnd.current.scrollIntoView({ behavior: "smooth", block: "end" });
+      msgEnd.current.scrollIntoView({ behavior: "smooth" });
     }
-    console.log(messages)
+
   }, [messages]);
+
   const handleSend = async () => {
-    if (input.trim() === "") return; // Don't send empty messages
 
-    // Add the user's message to the chat
-    const userMessage = { text: input, sender: "user" };
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
-    // Clear the input field
+    if (!input.trim()) return;
+
+    const userMessage = {
+      text: input,
+      sender: "user"
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+
+    const question = input;
+
     setInput("");
-    // Get the response from the Gemini API
-    const botResponse = await sendMsgToGemini(input);
-    const botMessage = { text: botResponse, sender: "bot" };
 
-    // Add the bot's response to the chat after a slight delay
-    setMessages((prevMessages) => [...prevMessages, botMessage]);
+    const botReply = await sendMsgToGemini(question);
 
-    
+    const botMessage = {
+      text: botReply,
+      sender: "bot"
+    };
+
+    setMessages(prev => [...prev, botMessage]);
+
   };
 
-  // Handle "Enter" key press to send message
   const handleKeyPress = (e) => {
+
     if (e.key === "Enter") {
       handleSend();
     }
+
   };
 
   return (
+
     <div className="App">
+
       <div className="sideBar">
+
         <div className="upperSide">
+
           <div className="upperSideTop">
-            <img src={gptLogo} alt="Logo" className="logo" />
-            <span className="brand">ChatGPT</span>
+            <img src={gptLogo} alt="logo" className="logo" />
+            <span className="brand">AI Chat</span>
           </div>
+
           <button className="midBtn">
-            <img src={addBtn} alt="New Chat" className="addBtn" /> New Chat
+            <img src={addBtn} alt="new chat" className="addBtn" />
+            New Chat
           </button>
+
           <div className="upperSideBottom">
+
             <button className="query">
-              <img src={msgIcon} alt="Query" /> What is Programming?
+              <img src={msgIcon} alt="" />
+              What is Programming?
             </button>
+
             <button className="query">
-              <img src={msgIcon} alt="Query" /> How to Use API?
+              <img src={msgIcon} alt="" />
+              How to use API?
             </button>
+
           </div>
+
         </div>
+
         <div className="lowerSide">
+
           <div className="listItems">
-            <img src={home} alt="Home" className="listItemsImg" /> Home
+            <img src={home} alt="" className="listItemsImg" />
+            Home
           </div>
+
           <div className="listItems">
-            <img src={saved} alt="Saved" className="listItemsImg" /> Saved
+            <img src={saved} alt="" className="listItemsImg" />
+            Saved
           </div>
+
           <div className="listItems">
-            <img src={rocket} alt="Upgrade" className="listItemsImg" /> Upgrade to Pro
+            <img src={rocket} alt="" className="listItemsImg" />
+            Upgrade
           </div>
+
         </div>
+
       </div>
 
       <div className="main">
+
         <div className="chats">
-          {messages.map((message, index) => (
+
+          {messages.map((msg, index) => (
+
             <div
-              className={`chat ${message.sender === "user" ? "user" : "bot"}`}
               key={index}
+              className={`chat ${msg.sender === "user" ? "user" : "bot"}`}
             >
-              {message.sender === "user" ? (
-                <>  
-                <img src={userIcon} className="userImg" alt="User" />
 
-                  <p className="txt">{message.text}</p>
-                </>
-              ) : (
+              {msg.sender === "user" ? (
+
                 <>
-                  <img src={gptImgLogo} className="chatImg" alt="Bot" />
-                  <p className="txt">{message.text}</p>
+                  <p className="txt">{msg.text}</p>
+                  <img src={userIcon} className="userImg" alt="" />
                 </>
+
+              ) : (
+
+                <>
+                  <img src={gptImgLogo} className="chatImg" alt="" />
+                  <p className="txt">{msg.text}</p>
+                </>
+
               )}
+
             </div>
+
           ))}
-                  </div>
 
+          <div ref={msgEnd}></div>
 
-         <div ref={msgEnd} />
+        </div>
 
         <div className="chatFooter">
+
           <div className="inp">
+
             <input
               type="text"
               placeholder="Send a message"
@@ -158,23 +198,209 @@ function App() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
             />
+
             <button
               className={`send ${input ? "active" : ""}`}
               onClick={handleSend}
               disabled={!input.trim()}
             >
-              <img src={sendBtn} alt="Send" />
+
+              <img src={sendBtn} alt="send" />
+
             </button>
+
           </div>
-          <p> ChatGPT can make mistakes. <a href="https://digitalamitchoudhary.com">Check important info.</a> </p>
-          <p> <a href="https://zaap.bio/digitalamitchoudhary"> Made with <span style={{ color: 'red' }}>❤</span> by Digitalamitchoudhary
-  </a>
-</p>
+
+          <p>AI can make mistakes. Check important information.</p>
 
         </div>
+
       </div>
+
     </div>
+
   );
+
 }
 
 export default App;
+// import './App.css';
+// import gptLogo from '../src/assest/chatgpt.svg';
+// import addBtn from '../src/assest/add-30.png';
+// import msgIcon from '../src/assest/message.svg';
+// import home from '../src/assest/home.svg';
+// import saved from '../src/assest/bookmark.svg';
+// import rocket from '../src/assest/rocket.svg';
+// import sendBtn from '../src/assest/send.svg';
+// import userIcon from '../src/assest/user-icon.png';
+// import gptImgLogo from '../src/assest/chatgptLogo.svg';
+// import { useEffect, useRef, useState } from 'react';
+// import axios from 'axios';
+
+// // Function to send message to Gemini API
+// const sendMsgToGemini = async (message) => {
+//   const API_KEY =  process.env.REACT_APP_API_URL; // Add your Gemini API key here
+//   const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+
+//   try {
+//     // const response = await axios.post(
+//     //   `${GEMINI_API_URL}?key=${API_KEY}`,
+//     //   {
+//     //     contents: [{ parts: [{ text: message }] }]
+//     //   }
+//     // );
+
+//     const response = await axios.post(
+//       "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
+//       {
+//         contents: [
+//           {
+//             parts: [
+//               { text: message }
+//             ]
+//           }
+//         ]
+//       },
+//       {
+//         headers: {
+//           "Content-Type": "application/json",
+//           "X-goog-api-key": API_KEY
+//         }
+//       }
+//     );
+
+//     return response.data.candidates[0]?.content.parts[0]?.text || "No response";
+//   } catch (error) {
+//     console.error("Error fetching Gemini API response:", error);
+//     return "Error fetching response.";
+//   }
+// };
+
+// function App() {
+//   const msgEnd = useRef(null);
+//   const [input, setInput] = useState("");
+//   const [messages, setMessages] = useState([
+//     { text: "Hello! How can I help you today?", sender: "bot" }
+//   ]);
+
+  
+//   useEffect(() => {
+//     // Scroll to the bottom whenever the messages change
+//     if (msgEnd.current) {
+//       msgEnd.current.scrollIntoView({ behavior: "smooth", block: "end" });
+//     }
+//     console.log(messages)
+//   }, [messages]);
+//   const handleSend = async () => {
+//     if (input.trim() === "") return; // Don't send empty messages
+
+//     // Add the user's message to the chat
+//     const userMessage = { text: input, sender: "user" };
+//     setMessages((prevMessages) => [...prevMessages, userMessage]);
+//     // Clear the input field
+//     setInput("");
+//     // Get the response from the Gemini API
+//     const botResponse = await sendMsgToGemini(input);
+//     const botMessage = { text: botResponse, sender: "bot" };
+
+//     // Add the bot's response to the chat after a slight delay
+//     setMessages((prevMessages) => [...prevMessages, botMessage]);
+
+    
+//   };
+
+//   // Handle "Enter" key press to send message
+//   const handleKeyPress = (e) => {
+//     if (e.key === "Enter") {
+//       handleSend();
+//     }
+//   };
+
+//   return (
+//     <div className="App">
+//       <div className="sideBar">
+//         <div className="upperSide">
+//           <div className="upperSideTop">
+//             <img src={gptLogo} alt="Logo" className="logo" />
+//             <span className="brand">ChatGPT</span>
+//           </div>
+//           <button className="midBtn">
+//             <img src={addBtn} alt="New Chat" className="addBtn" /> New Chat
+//           </button>
+//           <div className="upperSideBottom">
+//             <button className="query">
+//               <img src={msgIcon} alt="Query" /> What is Programming?
+//             </button>
+//             <button className="query">
+//               <img src={msgIcon} alt="Query" /> How to Use API?
+//             </button>
+//           </div>
+//         </div>
+//         <div className="lowerSide">
+//           <div className="listItems">
+//             <img src={home} alt="Home" className="listItemsImg" /> Home
+//           </div>
+//           <div className="listItems">
+//             <img src={saved} alt="Saved" className="listItemsImg" /> Saved
+//           </div>
+//           <div className="listItems">
+//             <img src={rocket} alt="Upgrade" className="listItemsImg" /> Upgrade to Pro
+//           </div>
+//         </div>
+//       </div>
+
+//       <div className="main">
+//         <div className="chats">
+//           {messages.map((message, index) => (
+//             <div
+//               className={`chat ${message.sender === "user" ? "user" : "bot"}`}
+//               key={index}
+//             >
+//               {message.sender === "user" ? (
+//                 <>  
+//                 <img src={userIcon} className="userImg" alt="User" />
+
+//                   <p className="txt">{message.text}</p>
+//                 </>
+//               ) : (
+//                 <>
+//                   <img src={gptImgLogo} className="chatImg" alt="Bot" />
+//                   <p className="txt">{message.text}</p>
+//                 </>
+//               )}
+//             </div>
+//           ))}
+//                   </div>
+
+
+//          <div ref={msgEnd} />
+
+//         <div className="chatFooter">
+//           <div className="inp">
+//             <input
+//               type="text"
+//               placeholder="Send a message"
+//               value={input}
+//               onChange={(e) => setInput(e.target.value)}
+//               onKeyDown={handleKeyPress}
+//             />
+//             <button
+//               className={`send ${input ? "active" : ""}`}
+//               onClick={handleSend}
+//               disabled={!input.trim()}
+//             >
+//               <img src={sendBtn} alt="Send" />
+//             </button>
+//           </div>
+//           <p> ChatGPT can make mistakes. <a href="https://digitalamitchoudhary.com">Check important info.</a> </p>
+//           <p> <a href="https://zaap.bio/digitalamitchoudhary"> Made with <span style={{ color: 'red' }}>❤</span> by Digitalamitchoudhary
+//   </a>
+// </p>
+
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default App;
